@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        table, th, td{
+            border: 1px solid black;
+            border-collapse:collapse;
+            padding: 5px;
+            font-family: "Helvetica Neue Light", "HelveticaNeue-Light", "Helvetica Neue", Calibri, Helvetica, Arial;
+        }
+        #header-div{
+            font-family: helvetica, serif;
+            background: #000000;
+            color: #ffffff;
+            width: 100%;
+            height: 90px;
+            display:inline-block;
+            vertical-align:middle;
+            line-height: 50px;
+            padding-left: 8px;
+        }
+        #input-container{
+            position: absolute;
+        }
+        #url-input{
+            position: relative;
+            /* float: left; */
+            padding-left: 10px;
+            margin-left: 10px;
+            margin-top: 40px;
+            width: 250px;
+        }
+        #url-btn{
+            position: relative;
+            /*float: left;*/
+        }
+        #header-title{
+            position: relative;
+            float: right;
+            padding-right: 15px;
+        }
+    </style>
+</head>
+<body onload="load()">
+<div id="header-div">
+    <div id="input-container">
+        <!--<input type="text" id="url-input" value="tpks/Beirut.zip" />-->
+        <!--<button id="url-btn">Get file via url</button>-->
+    </div>
+    <div id="header-title">IndexedDB Performance Test</div>
+</div>
+<table>
+    <tr>
+        <th>Initial Type</th>
+        <th>Type</th>
+        <th>Test</th>
+        <th>Image</th>
+        <th>Elapsed Time to get()</th>
+    </tr>
+    <tr>
+        <td>Simple String</td>
+        <td id="test1Title"></td>
+        <td id="test1Key"></td>
+        <td id="test1Value"></td>
+        <td id="test1Time"></td>
+    </tr>
+    <tr>
+        <td>Object</td>
+        <td id="test2Title"></td>
+        <td id="test2Key"></td>
+        <td id="test2Value"></td>
+        <td id="test2Time"></td>
+    </tr>
+    <tr>
+        <td>Array</td>
+        <td id="test3Title"></td>
+        <td id="test3Key"></td>
+        <td id="test3Value"></td>
+        <td id="test3Time"></td>
+    </tr>
+    <tr>
+        <td>Blob</td>
+        <td id="test4Title"></td>
+        <td id="test4Key"></td>
+        <td id="test4Value"></td>
+        <td id="test4Time"></td>
+    </tr>
+    <tr>
+        <td>Uint8Array</td>
+        <td id="test5Title"></td>
+        <td id="test5Key"></td>
+        <td id="test5Value"></td>
+        <td id="test5Time"></td>
+    </tr>
+    <tr>
+        <td>ArrayBuffer</td>
+        <td id="test6Title"></td>
+        <td id="test6Key"></td>
+        <td id="test6Value"></td>
+        <td id="test6Time"></td>
+    </tr>
+</table>
+
+<script src="libs/shim/IndexedDBShim.js"></script>
+<script src="libs/DBStore.js"></script>
+<script>
+
+    var base64image = "";
+    var path = "img/test1.jpg";
+    var store = null;
+    var keyArray = ["test1","test2","test3","test4","test5","test6"];
+
+    window.performance = window.performance || {};
+    performance.now = (function () {
+        return performance.now ||
+                performance.mozNow ||
+                performance.msNow ||
+                performance.oNow ||
+                performance.webkitNow ||
+                function () {
+                    return new Date().getTime();
+                };
+    })();
+
+    function load(){
+
+        store = new DBStore();
+
+        if(store.isSupported()){
+
+            store.init(function(result,err){
+                if(result){
+
+                    browserDBTest(function(result){
+
+                        if(result.errors) {
+                            console.log("THERE ARE ERRORS")
+                        }
+                        console.log("BrowserDBTest: " + JSON.stringify(result));
+
+                        clearDB(function(result,err){
+                            if(result){
+                                console.log("DB has been cleared.")
+                                getImage(function(image){
+                                    base64image = image;
+                                    init();
+                                })
+                            }
+                            else{
+                                console.log("There was a problem clearing the database")
+                            }
+                        })
+                    })
+                }
+                else{
+                    alert("There was a problem opening the database. " + JSON.stringify(err));
+                }
+            })
+        }
+    }
+
+    function clearDB(callback){
+        store.deleteAll(callback)
+    }
+
+    function browserDBTest(callback){
+
+        var uint8arr = new Uint8Array([100,1000,10001,208]);
+
+        var resultObj = {uint8array:false,blob:false,arraybuffer:false};
+        var errArray = [];
+
+        testUint8array(function(result,err){
+            if(result) {
+                resultObj.uint8array = true;
+            }
+            else{
+                errArray.push(1);
+                resultObj.uint8array = false;
+            }
+
+            testBlob(function(result,err){
+                if(result){
+                    resultObj.blob = true;
+                }
+                else{
+                    errArray.push(1);
+                    resultObj.blob = false;
+                }
+
+                testArrayBuffer(function(result,err){
+                    if(result) {
+                        resultObj.arraybuffer = true;
+                    }
+                    else{
+                        errArray.push(1);
+                        resultObj.arraybuffer = false;
+                    }
+
+                    deleteTests(function(result){
+                        if(result){
+
+                            var errors = false;
+
+                            if(errArray.length > 0) errors = true;
+
+                            callback({results:resultObj,errors:errors});
+                        }
+                        else{
+                            console.log("UNABLE to delete browser tests")
+                        }
+                    })
+                })
+            })
+        })
+
+        function testUint8array(callback){
+            store.add(uint8arr,"test0",function(result,err){
+                callback(result,err);
+            })
+        }
+
+        function testBlob(callback){
+            var blob = new Blob([uint8arr],{type:"image/jpeg"});
+            store.add(blob,"test1",function(result,err){
+                callback(result,err);
+            })
+        }
+
+        function testArrayBuffer(callback){
+            var buffer = new ArrayBuffer(12);
+            store.add(buffer,"test2",function(result,err){
+                callback(result,err);
+            })
+        }
+
+        function deleteTests(callback){
+            console.log("All DB support tests are complete.")
+            store.deleteAll(callback);
+        }
+    }
+
+    function getImage(callback){
+        getImageFromServer(path,"base64",function(image){
+            callback(image);
+        })
+    }
+
+    function init(){
+
+        ///Load the database
+
+        var s = base64image;
+        store.add(s,keyArray[0],function(result,err){
+            if(result){
+                console.log("TEST 1 - Simple string complete.")
+            }
+            else{
+                console.log("TEST 1 - Simple string FAILED.")
+            }
+        })
+
+        var t = {image:base64image}
+        store.add(t,keyArray[1],function(result,err){
+            if(result){
+                console.log("TEST 2 - Simple Object complete.")
+            }
+            else{
+                console.log("TEST 2 - Simple Object FAILED.")
+            }
+        })
+
+        var u = [base64image];
+        store.add(u,keyArray[2],function(result,err){
+            if(result){
+                console.log("TEST 3 - Simple Array complete.")
+            }
+            else{
+                console.log("TEST 3 - Simple Array FAILED.")
+            }
+
+            testBlob();
+        })
+
+        function testBlob(){
+            var path = "img/test1.jpg";
+            getImageFromServer(path,"arraybuffer",function(array){
+                var blob = new Blob([array],{type:"image/jpeg"});
+                store.add(blob,keyArray[3],function(result,err){
+                    if(result){
+                        console.log("TEST 4 - Blob complete.")
+                    }
+                    else{
+                        console.log("TEST 4 - Blob FAILED.")
+                    }
+
+                    testUint8Arr();
+                })
+            })
+        }
+
+        function testUint8Arr(){
+            var path = "img/test1.jpg";
+            getImageFromServerUint8Array(path,function(array){
+                store.add(array,keyArray[4],function(result,err){
+                    if(result){
+                        console.log("TEST 5 - Uint8Array complete.")
+                    }
+                    else{
+                        console.log("TEST 5 - Uint8Array FAILED.")
+                    }
+
+                    testArrayBuffer();
+                })
+            })
+        }
+
+
+        function testArrayBuffer(){
+            var path = "img/test1.jpg";
+            getImageFromServer(path,"arraybuffer",function(array){
+//                var bufferArr = new Uint8Array(array);
+                store.add(array,keyArray[5],function(result,err){
+                    if(result){
+                        console.log("TEST 6 - ArrayBuffer complete.")
+                    }
+                    else{
+                        console.log("TEST 6 - ArrayBuffer FAILED.")
+                    }
+
+                    retrieve();
+                })
+            })
+        }
+
+        function retrieve(){
+
+                store.getAll(function(result){
+
+                    console.log("Retrieving results: " + JSON.stringify(result.key));
+
+                    if(result){
+
+                        var title = document.getElementById(result.key + "Title");
+                        var test = document.getElementById(result.key + "Key");
+                        var value = document.getElementById(result.key + "Value");
+                        var time = document.getElementById(result.key + "Time");
+
+                        test.innerHTML = result.key;
+
+                        var finalType = getType(result.item);
+                        console.log("Initial TYPE: " + finalType)
+
+                        //Safari bug - not detecting type Uint8Array on the return value
+                        if(finalType === "object" && result.item.hasOwnProperty("byteOffset")){
+                            //It's strange that the return value has a byteOffset property
+                            //but it seems to actually be tried as an ArrayBuffer.
+                            finalType = "arraybuffer";
+                        }
+
+                        //Safari bug - not detecting type ArrayBuffer on the return value
+                        if(finalType === "object" && !result.item.hasOwnProperty("byteOffset") && result.item.hasOwnProperty("byteLength")){
+                            finalType = "arraybuffer";
+                        }
+
+                        if(finalType === "object" && result.item.hasOwnProperty("size")) finalType = "blob";
+
+                        console.log("Final TYPE: " + finalType)
+
+                        if(result.key == "test5"){
+                            console.log("YIP")
+                        }
+
+                        title.innerHTML = finalType;
+
+                        var startTime = performance.now();
+
+                        switch(finalType){
+                            case "string":
+                                var image = document.createElement("img");
+                                image.src = "data:image/png;base64," + result.item;
+                                image.height = 30;
+
+                                var t = performance.now() - startTime;
+                                time.innerHTML = t + "ms";
+
+                                value.appendChild(image);
+                                break;
+                            case "object":
+
+                                var image = document.createElement("img");
+                                image.src = "data:image/png;base64," + result.item.image;
+                                image.height = 30;
+
+                                var t = performance.now() - startTime;
+                                time.innerHTML = t + "ms";
+                                value.appendChild(image)
+                                break;
+                            case "array":
+
+                                var image = document.createElement("img");
+                                image.src = "data:image/png;base64," + result.item[0];
+                                image.height = 30;
+
+                                var t = performance.now() - startTime;
+                                time.innerHTML = t + "ms";
+                                value.appendChild(image);
+                                break;
+                            case "blob": //for Safari!
+                                var image = document.createElement("img"); console.log("BLOB SRC: " + result.item.$enc)
+                                if(result.item.hasOwnProperty("$enc")){
+                                    image.src = result.item.$enc;
+                                }
+                                else{
+                                    var urlCreate = window.URL || window.webkitURL;
+                                    var url = urlCreate.createObjectURL(result.item);
+                                    image.src = url;
+                                }
+                                image.height = 30;
+                                var t = performance.now() - startTime;
+                                time.innerHTML = t + "ms";
+
+                                value.appendChild(image)
+                                break;
+                            case "arraybuffer": console.log("ARRAYBUFF " + result.item.byteLength)
+                                var uInt8Array = new Uint8Array(result.item);
+                                var blob = new Blob([uInt8Array],{type:"image/jpeg"});
+                                var image = document.createElement("img");
+                                var urlCreate = window.URL || window.webkitURL;
+                                var url = urlCreate.createObjectURL(blob); console.log("ARRAYBUFF2 " + url)
+                                image.src = url;
+                                image.height = 30;
+                                image.onload = function(e){
+                                    URL.revokeObjectURL(this.src);
+                                }
+
+                                var t = performance.now() - startTime;
+                                time.innerHTML = t + "ms";
+
+                                value.appendChild(image)
+                                break;
+                            case "uint8array":
+                                var blob = new Blob([result.item],{type:"image/jpeg"});
+                                var image = document.createElement("img");
+                                image.src = URL.createObjectURL(blob);
+                                image.height = 30;
+                                image.onload = function(e){
+                                    URL.revokeObjectURL(this.src);
+                                }
+
+                                var t = performance.now() - startTime;
+                                time.innerHTML = t + "ms";
+
+                                value.appendChild(image)
+                                break;
+                        }
+                    }
+                })
+        }
+    }
+
+    function copyUint8Array(array)  {
+        var buffer = new ArrayBuffer(array.byteLength);
+        new Uint8Array(buffer).set(new Uint8Array(array));
+        return buffer;
+    }
+
+    function getType(item){
+        if(item===null)return null;
+        var temp = Object.prototype.toString.call(item).split(" ");
+        return temp[1].replace(/\W/g, '').toLowerCase()
+    }
+
+    function getImageFromServerUint8Array(/* String */ path, callback){
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET",path,true);
+        xhr.responseType = "arraybuffer";
+        xhr.onload = function(e){
+            if(this.status == 200){
+                var uint8Array = new Uint8Array(this.response);
+                callback(uint8Array);
+            }
+            else{
+                console.log("Problem retrieving image " + JSON.stringify(e))
+            }
+        }
+        xhr.send();
+    }
+
+    function getImageFromServer(/* String */ path, handler, callback){
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET",path,true);
+        xhr.responseType = "arraybuffer";
+        xhr.onload = function(e){
+            if(this.status == 200){
+
+                switch(handler){
+                    case "uint8":
+                        var uint8Array = new Uint8Array(this.response);
+                        callback(uint8Array);
+                        break;
+                    case "arraybuffer":
+                        callback(this.response);
+                        break;
+                    case "base64":
+                        console.time("start1")
+                        var b64 = _base64ArrayBuffer(this.response);
+                        console.timeEnd("start1")
+                        callback(b64);
+                        break;
+                    case "base64filereader":
+                        console.time("start2")
+                        var uInt8Array = new Uint8Array(this.response);
+                        var blob = new Blob([uInt8Array],{type:"image/jpeg"})
+                        var reader = new FileReader();
+                        reader.onloadend = function(evt){
+                            console.timeEnd("start2")
+                            callback(evt);
+                        }
+
+                        reader.readAsDataURL(blob);
+                        break;
+                }
+
+                console.log("Image size: " + this.response.byteLength + " bytes")
+//                callback(this.response);
+            }
+            else{
+                console.log("Problem retrieving image " + JSON.stringify(e))
+            }
+        }
+        xhr.send();
+    }
+
+    /**
+     * Convert an ArrayBuffer to base64. My testing shows this to be
+     * much faster than combining Blobs and btoa().
+     * ALL CREDITS: https://gist.github.com/jonleighton/958841
+     * NO licensing listed at the gist repo.
+     * @param arrayBuffer
+     * @returns {string}
+     * @private
+     */
+    function _base64ArrayBuffer(arrayBuffer) {
+        var base64    = ''
+        var encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+
+        var bytes         = new Uint8Array(arrayBuffer)
+        var byteLength    = bytes.byteLength
+        var byteRemainder = byteLength % 3
+        var mainLength    = byteLength - byteRemainder
+
+        var a, b, c, d
+        var chunk
+
+        // Main loop deals with bytes in chunks of 3
+        for (var i = 0; i < mainLength; i = i + 3) {
+            // Combine the three bytes into a single integer
+            chunk = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2]
+
+            // Use bitmasks to extract 6-bit segments from the triplet
+            a = (chunk & 16515072) >> 18 // 16515072 = (2^6 - 1) << 18
+            b = (chunk & 258048)   >> 12 // 258048   = (2^6 - 1) << 12
+            c = (chunk & 4032)     >>  6 // 4032     = (2^6 - 1) << 6
+            d = chunk & 63               // 63       = 2^6 - 1
+
+            // Convert the raw binary segments to the appropriate ASCII encoding
+            base64 += encodings[a] + encodings[b] + encodings[c] + encodings[d]
+        }
+
+        // Deal with the remaining bytes and padding
+        if (byteRemainder == 1) {
+            chunk = bytes[mainLength]
+
+            a = (chunk & 252) >> 2 // 252 = (2^6 - 1) << 2
+
+            // Set the 4 least significant bits to zero
+            b = (chunk & 3)   << 4 // 3   = 2^2 - 1
+
+            base64 += encodings[a] + encodings[b] + '=='
+        } else if (byteRemainder == 2) {
+            chunk = (bytes[mainLength] << 8) | bytes[mainLength + 1]
+
+            a = (chunk & 64512) >> 10 // 64512 = (2^6 - 1) << 10
+            b = (chunk & 1008)  >>  4 // 1008  = (2^6 - 1) << 4
+
+            // Set the 2 least significant bits to zero
+            c = (chunk & 15)    <<  2 // 15    = 2^4 - 1
+
+            base64 += encodings[a] + encodings[b] + encodings[c] + '='
+        }
+
+        return base64
+    }
+
+
+</script>
+</body>
+</html>
