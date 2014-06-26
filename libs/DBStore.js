@@ -244,7 +244,7 @@
             {
                 console.log("indexedDB error: " + event.target.errorCode);
                 callback(false,event.target.errorCode);
-            }.bind(this);
+            }
 
             request.onupgradeneeded = function(event) 
             {
@@ -256,7 +256,7 @@
                 }            
 
                 db.createObjectStore("table1");
-            }.bind(this);
+            }
 
             request.onsuccess = function(event)
             {
