@@ -246,6 +246,12 @@
                 callback(false,event.target.errorCode);
             }
 
+            request.onblocked = function(event) {
+                // If some other tab is loaded with the database, then it needs to be closed
+                // before we can proceed.
+                alert("Please close all other tabs with this site open!");
+            };
+
             request.onupgradeneeded = function(event) 
             {
                 var db = event.target.result;
