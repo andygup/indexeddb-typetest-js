@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Test DB</title>
+</head>
+<body>
+    <div>Step 1. Retrieving image and writing to database...Check the console for errors.</div>
+    <br><br>
+    <div>Step 2. <button onclick="retrieve()">Click to pull image from database.</button></div>
+    <br><br>
+    <div id="imageDiv">Step 3. No image to see yet...</div>
+
+    <!-- required so that this code will work on Safari which only uses WebSQL -->
+    <script src="shim/IndexedDBShim.js"></script>
+    <script src="libs/DBStore.js"></script>
+    <script>
+        var store = new DBStore();
+        if(store.isSupported()){
+
+            store.init(function(result,err){
+                if(result){
+
+                    clearDB(function(result,err){
+                        if(result){
+//                            var uint8arr = new Uint8Array([100,1000,10001,208]);
+//                            var blob = new Blob([uint8arr],{type:"image/jpeg"});
+
+                            getImageFromServer("img/test1.jpg",function(result){
+                                store.add(result,"test1",function(result,err){
+                                    console.log("Attempting a put. RESULT: " + result + ", ERROR: " + JSON.stringify(err));
+                                })
+                            })
+                        }
+                        else{
+                            console.log("There was a problem clearing the database")
+                        }
+                    })
+                }
+                else{
+                    alert("There was a problem opening the database. " + JSON.stringify(err));
+                }
+            })
+        }
+
+        function clearDB(callback){
+            store.deleteAll(callback)
+        }
+
+        function retrieve(){
+            store.retrieve("test1",function(success,result){
+                convertArrayBuffer(result);
+                console.log("Retrieval result: " + result);
+            })
+        }
+
+        function convertArrayBuffer(result){
+            var uInt8Array = new Uint8Array(result);
+            var blob = new Blob([uInt8Array],{type:"image/jpeg"});
+            var image = document.createElement("img");
+            var urlCreate = window.URL || window.webkitURL;
+            var url = urlCreate.createObjectURL(blob);
+            image.src = url;
+            image.height = 150;
+            image.onload = function(e){
+                URL.revokeObjectURL(this.src);
+            }
+
+            var value = document.getElementById("imageDiv");
+            value.textContent = "Step 3. ";
+            value.appendChild(image)
+        }
+
+        function getImageFromServer(/* String */ path, callback){
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET",path,true);
+            xhr.responseType = "arraybuffer";
+            xhr.onload = function(e){
+                if(this.status == 200){
+                    callback(this.response);
+                }
+                else{
+                    console.log("Problem retrieving image " + JSON.stringify(e))
+                }
+            }
+            xhr.send();
+        }
+    </script>
+
+</body>
+</html>
