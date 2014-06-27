@@ -8,8 +8,14 @@
  */
 
 "use strict";
-var DBValidate = function(){
-    this.store = new DBStore();
+/**
+ * Validates ability to store certain types of data in IndexedDB
+ * @param dbStore
+ * @constructor
+ */
+var DBValidate = function(dbStore){
+    this.store = dbStore;
+    var uint8arr = new Uint8Array([100,1000,10001,208]);
 
     /**
      * Runs the checks
@@ -17,7 +23,6 @@ var DBValidate = function(){
      * {uint8array:false,blob:false,arraybuffer:false}
      */
     this.run = function(callback){
-        var uint8arr = new Uint8Array([100,1000,10001,208]);
 
         var resultObj = {uint8array:false,blob:false,arraybuffer:false};
         var errArray = [];
@@ -62,9 +67,9 @@ var DBValidate = function(){
                             console.log("UNABLE to delete browser tests")
                         }
                     })
-                })
-            })
-        })
+                }.bind(this))
+            }.bind(this))
+        }.bind(this))
     }
 
     // Add a Uint8Array
