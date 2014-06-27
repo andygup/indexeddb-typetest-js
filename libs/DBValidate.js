@@ -14,13 +14,13 @@
  * @constructor
  */
 var DBValidate = function(dbStore){
-    this.store = dbStore;
+    var store = dbStore;
     var uint8arr = new Uint8Array([100,1000,10001,208]);
 
     /**
      * Runs the checks
-     * @param callback (resultObject,errorsArray). Example resultObject:
-     * {uint8array:false,blob:false,arraybuffer:false}
+     * @param callback (resultObject,errors). Example resultObject:
+     * {uint8array:false,blob:false,arraybuffer:false}. Errors is boolean.
      */
     this.run = function(callback){
 
@@ -74,27 +74,27 @@ var DBValidate = function(dbStore){
 
     // Add a Uint8Array
     this.testUint8array = function(callback){
-        this.store.add(uint8arr,"test0",function(result,err){
+        store.add(uint8arr,"test0",function(result,err){
             callback(result,err);
         })
     }
 
     this.testBlob = function(callback){
         var blob = new Blob([uint8arr],{type:"image/jpeg"});
-        this.store.add(blob,"test1",function(result,err){
+        store.add(blob,"test1",function(result,err){
             callback(result,err);
         })
     }
 
     this.testArrayBuffer = function(callback){
         var buffer = new ArrayBuffer(12);
-        this.store.add(buffer,"test2",function(result,err){
+        store.add(buffer,"test2",function(result,err){
             callback(result,err);
         })
     }
 
     this.deleteTests = function(callback){
         console.log("All DB support tests are complete.")
-        this.store.deleteAll(callback);
+        store.deleteAll(callback);
     }
 }
