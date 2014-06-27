@@ -169,8 +169,9 @@
     }
 
     function getImage(callback){
-        getImageFromServer(path,"base64",function(image){
-            callback(image);
+        getImageFromServer(path,"arraybuffer",function(image){
+            var b64 = _base64ArrayBuffer(image);
+            callback(b64);
         })
     }
 
@@ -229,8 +230,9 @@
 
         function testUint8Arr(){
             var path = "img/test1.jpg";
-            getImageFromServerUint8Array(path,function(array){
-                store.add(array,keyArray[4],function(result,err){
+            getImageFromServer(path,"arraybuffer",function(response){
+                var uint8Array = new Uint8Array(response);
+                store.add(uint8Array,keyArray[4],function(result,err){
                     if(result){
                         console.log("TEST 5 - Uint8Array complete.")
                     }
@@ -399,59 +401,13 @@
         return temp[1].replace(/\W/g, '').toLowerCase()
     }
 
-    function getImageFromServerUint8Array(/* String */ path, callback){
+    function getImageFromServer(/* String */ path, responseType,callback){
         var xhr = new XMLHttpRequest();
         xhr.open("GET",path,true);
-        xhr.responseType = "arraybuffer";
+        xhr.responseType = responseType;
         xhr.onload = function(e){
             if(this.status == 200){
-                var uint8Array = new Uint8Array(this.response);
-                callback(uint8Array);
-            }
-            else{
-                console.log("Problem retrieving image " + JSON.stringify(e))
-            }
-        }
-        xhr.send();
-    }
-
-    function getImageFromServer(/* String */ path, handler, callback){
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET",path,true);
-        xhr.responseType = "arraybuffer";
-        xhr.onload = function(e){
-            if(this.status == 200){
-
-                switch(handler){
-                    case "uint8":
-                        var uint8Array = new Uint8Array(this.response);
-                        callback(uint8Array);
-                        break;
-                    case "arraybuffer":
-                        callback(this.response);
-                        break;
-                    case "base64":
-                        console.time("start1")
-                        var b64 = _base64ArrayBuffer(this.response);
-                        console.timeEnd("start1")
-                        callback(b64);
-                        break;
-                    case "base64filereader":
-                        console.time("start2")
-                        var uInt8Array = new Uint8Array(this.response);
-                        var blob = new Blob([uInt8Array],{type:"image/jpeg"})
-                        var reader = new FileReader();
-                        reader.onloadend = function(evt){
-                            console.timeEnd("start2")
-                            callback(evt);
-                        }
-
-                        reader.readAsDataURL(blob);
-                        break;
-                }
-
-                console.log("Image size: " + this.response.byteLength + " bytes")
-//                callback(this.response);
+                callback(this.response);
             }
             else{
                 console.log("Problem retrieving image " + JSON.stringify(e))
