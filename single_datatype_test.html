@@ -22,11 +22,15 @@ and then retrieving it back from the database and displaying it.
     <script src="libs/DBStore.js"></script>
     <script>
         var store = new DBStore();
+
+        // Check if database is supported
         if(store.isSupported()){
 
+            // Initialize the database
             store.init(function(result,err){
                 if(result){
 
+                    // This is a test, so clear any old results out.
                     clearDB(function(result,err){
                         if(result){
 //                            var uint8arr = new Uint8Array([100,1000,10001,208]);
