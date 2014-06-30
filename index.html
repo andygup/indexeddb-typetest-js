@@ -114,6 +114,7 @@
     var keyArray = ["test1","test2","test3","test4","test5","test6"];
     var dbValidate = null;
 
+    // Hack to allow performance to run on Safari
     window.performance = window.performance || {};
     performance.now = (function () {
         return performance.now ||
@@ -148,7 +149,7 @@
                                 console.log("DB has been cleared.")
                                 getImage(function(image){
                                     base64image = image;
-                                    init();
+                                    addDataToDB();
                                 })
                             }
                             else{
@@ -175,7 +176,7 @@
         })
     }
 
-    function init(){
+    function addDataToDB(){
 
         ///Load the database
 
@@ -230,8 +231,8 @@
 
         function testUint8Arr(){
             var path = "img/test1.jpg";
-            getImageFromServer(path,"arraybuffer",function(response){
-                var uint8Array = new Uint8Array(response);
+            getImageFromServer(path,"arraybuffer",function(array){
+                var uint8Array = new Uint8Array(array);
                 store.add(uint8Array,keyArray[4],function(result,err){
                     if(result){
                         console.log("TEST 5 - Uint8Array complete.")
@@ -249,7 +250,6 @@
         function testArrayBuffer(){
             var path = "img/test1.jpg";
             getImageFromServer(path,"arraybuffer",function(array){
-//                var bufferArr = new Uint8Array(array);
                 store.add(array,keyArray[5],function(result,err){
                     if(result){
                         console.log("TEST 6 - ArrayBuffer complete.")
