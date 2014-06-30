@@ -196,6 +196,7 @@
 
         /**
          * Provides the size of database in bytes
+         * Currently only works if data type is String
          * @param callback callback(size, null) or callback(null, error)
          */
         this.usedSpace = function(callback){
@@ -210,9 +211,18 @@
                     var cursor = event.target.result;
                     if(cursor){
                         var storedObject = cursor.value;
-                        var json = JSON.stringify(storedObject);
-                        usage.sizeBytes += this._stringBytes(json);
-                        usage.tileCount += 1;
+
+
+                        var type = this._getType(storedObject);
+
+                        switch(type){
+                            case "string":
+                                var json = JSON.stringify(storedObject);
+                                usage.sizeBytes += this._stringBytes(json);
+                                usage.tileCount += 1;
+                                break;
+                        }
+
                         cursor.continue();
                     }
                     else
@@ -234,6 +244,12 @@
         this._stringBytes = function(str) {            
             return str.length /**2*/ ;
         };
+
+        this._getType = function(item){
+            if(item===null)return null;
+            var temp = Object.prototype.toString.call(item).split(" ");
+            return temp[1].replace(/\W/g, '').toLowerCase()
+        }
 
         this.init = function(callback)
         {
