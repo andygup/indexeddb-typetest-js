@@ -253,12 +253,12 @@
 
         this.init = function(callback)
         {
-            var request = indexedDB.open(DB_NAME, 4);
+            var request = indexedDB.open(DB_NAME, 5);
             callback = callback || function(success) { console.log("DBStore::init() success:", success); }.bind(this);
 
             request.onerror = function(event) 
             {
-                console.log("indexedDB error: " + event.target.errorCode);
+                console.log("indexedDB error: " + JSON.stringify(event.target));
                 callback(false,event.target.errorCode);
             }
 
