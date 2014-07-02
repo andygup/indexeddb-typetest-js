@@ -258,8 +258,8 @@
 
             request.onerror = function(event) 
             {
-                console.log("indexedDB error: " + JSON.stringify(event.target));
-                callback(false,event.target.errorCode);
+                console.log("indexedDB error: " + JSON.stringify(event.debug[1].message));
+                callback(false,event.debug[1].message);
             }
 
             request.onblocked = function(event) {
