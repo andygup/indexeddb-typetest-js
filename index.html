@@ -43,7 +43,7 @@
         }
     </style>
 </head>
-<body onload="load()">
+<body>
 <div id="header-div">
     <div id="input-container">
         <!--<input type="text" id="url-input" value="tpks/Beirut.zip" />-->
@@ -126,6 +126,8 @@
                     return new Date().getTime();
                 };
     })();
+
+    window.onload = load();
 
     function load(){
 
