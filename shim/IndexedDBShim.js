@@ -1464,7 +1464,7 @@ var idbModules = {};
 /*jshint globalstrict: true*/
 'use strict';
 (function(idbModules){
-    var DEFAULT_DB_SIZE = 24 * 1024 * 1024;
+    var DEFAULT_DB_SIZE = 12 * 1024 * 1024;
     if (!window.openDatabase) {
         return;
     }
@@ -1476,8 +1476,9 @@ var idbModules = {};
         }, function(){
             // dbVersions does not exist, so creating it
             sysdb.transaction(function(tx){
-                tx.executeSql("CREATE TABLE IF NOT EXISTS dbVersions (name VARCHAR(255), version INT);", [], function(){
-                }, function(){
+                tx.executeSql("CREATE TABLE IF NOT EXISTS dbVersions (name VARCHAR(255), version INT);", [],
+                    function(){ console.log("IndexedDB Shim INITIALIZED!");var event = new Event("IndexedDBShimInit"); window.dispatchEvent(event);},
+                    function(){
                     idbModules.util.throwDOMException("Could not create table __sysdb__ to save DB versions");
                 });
             });
