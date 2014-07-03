@@ -21,6 +21,20 @@ and then retrieving it back from the database and displaying it.
     <script src="shim/IndexedDBShim.js"></script>
     <script src="libs/DBStore.js"></script>
     <script>
+
+        // Hack to allow performance to run on Safari
+        window.performance = window.performance || {};
+        performance.now = (function () {
+            return performance.now ||
+                    performance.mozNow ||
+                    performance.msNow ||
+                    performance.oNow ||
+                    performance.webkitNow ||
+                    function () {
+                        return new Date().getTime();
+                    };
+        })();
+
         var store = new DBStore();
 
         // Check if database is supported
@@ -37,7 +51,10 @@ and then retrieving it back from the database and displaying it.
 //                            var blob = new Blob([uint8arr],{type:"image/jpeg"});
 
                             getImageFromServer("img/test1.jpg",function(result){
-                                store.add(result,"test1",function(result,err){
+
+                                var uInt8Array = new Uint8Array(result);
+
+                                store.add(uInt8Array,"test1",function(result,err){
                                     console.log("Attempting a put. RESULT: " + result + ", ERROR: " + JSON.stringify(err));
                                 })
                             })
@@ -58,13 +75,21 @@ and then retrieving it back from the database and displaying it.
         }
 
         function retrieve(){
+
+            var startTime = performance.now();
+
             store.retrieve("test1",function(success,result){
                 convertArrayBuffer(result);
                 console.log("Retrieval result: " + result);
+                var t = performance.now() - startTime;
+                console.log("time to retrieve data from DB: " + t + "ms");
             })
         }
 
         function convertArrayBuffer(result){
+
+            var startTime = performance.now();
+
             var uInt8Array = new Uint8Array(result);
             var blob = new Blob([uInt8Array],{type:"image/jpeg"});
             var image = document.createElement("img");
@@ -74,6 +99,9 @@ and then retrieving it back from the database and displaying it.
             image.height = 150;
             image.onload = function(e){
                 URL.revokeObjectURL(this.src);
+
+                var t = performance.now() - startTime;
+                console.log("time to convertArrayBuffer: " + t + "ms");
             }
 
             var value = document.getElementById("imageDiv");
