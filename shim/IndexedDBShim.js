@@ -1472,7 +1472,7 @@ var idbModules = {};
     var sysdb = window.openDatabase("__sysdb__", 1, "System Database", DEFAULT_DB_SIZE);
     sysdb.transaction(function(tx){
         tx.executeSql("SELECT * FROM dbVersions", [], function(t, data){
-            // dbVersions already exists
+            console.log("IndexedDB Shim INITIALIZED!");var event = new Event("IndexedDBShimInit"); window.dispatchEvent(event);
         }, function(){
             // dbVersions does not exist, so creating it
             sysdb.transaction(function(tx){
