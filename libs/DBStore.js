@@ -164,9 +164,9 @@
 
         /**
          * Retrieve all tiles from indexeddb
-         * @param callback callbakck(item, err)
+         * @param callback callback(item, err)
          */
-        this.getAll = function(callback)
+        this.getAll = function(callback,complete)
         {
             if(this._db !== null){
                 var transaction = this._db.transaction(["table1"])
@@ -181,6 +181,9 @@
                         console.log("DB Retreiving: " + cursor.key);
                         cursor.continue();
                         callback({key:cursor.key,item:cursor.value},null);
+                    }
+                    else{
+                        complete(true);
                     }
                 };
                 transaction.onerror = function(err)
