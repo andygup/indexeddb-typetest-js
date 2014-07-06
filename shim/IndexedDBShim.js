@@ -1466,6 +1466,7 @@ var idbModules = {};
 (function(idbModules){
     var DEFAULT_DB_SIZE = 12 * 1024 * 1024;
     if (!window.openDatabase) {
+        console.log("IndexedDB Shim Web SQL not supported!");var event = new Event("IndexedDBShimInit"); window.dispatchEvent(event);
         return;
     }
     // The sysDB to keep track of version numbers for databases
