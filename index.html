@@ -102,13 +102,66 @@
         <td id="test6Time"></td>
     </tr>
 </table>
+<br><br>
+<table>
+    <tr>
+        <th>Initial Type</th>
+        <th>Type</th>
+        <th>Test</th>
+        <th>Image</th>
+        <th>Elapsed Time to get()</th>
+    </tr>
+    <tr>
+        <td>Simple String</td>
+        <td id="test7Title"></td>
+        <td id="test7Key"></td>
+        <td id="test7Value"></td>
+        <td id="test7Time"></td>
+    </tr>
+    <tr>
+        <td>Object</td>
+        <td id="test8Title"></td>
+        <td id="test8Key"></td>
+        <td id="test8Value"></td>
+        <td id="test8Time"></td>
+    </tr>
+    <tr>
+        <td>Array</td>
+        <td id="test9Title"></td>
+        <td id="test9Key"></td>
+        <td id="test9Value"></td>
+        <td id="test9Time"></td>
+    </tr>
+    <tr>
+        <td>Blob</td>
+        <td id="test10Title"></td>
+        <td id="test10Key"></td>
+        <td id="test10Value"></td>
+        <td id="test10Time"></td>
+    </tr>
+    <tr>
+        <td>Uint8Array</td>
+        <td id="test11Title"></td>
+        <td id="test11Key"></td>
+        <td id="test11Value"></td>
+        <td id="test11Time"></td>
+    </tr>
+    <tr>
+        <td>ArrayBuffer</td>
+        <td id="test12Title"></td>
+        <td id="test12Key"></td>
+        <td id="test12Value"></td>
+        <td id="test12Time"></td>
+    </tr>
+</table>
 
 <script src="libs/DBStore.js"></script>
 <script src="libs/DBValidate.js"></script>
 <script>
 
+    var counter = 0;
     var base64image = "";
-    var path = "img/test1.jpg";
+    var path = "img/tile1.png";
     var store = null;
     var keyArray = ["test1","test2","test3","test4","test5","test6"];
     var dbValidate = null;
@@ -150,7 +203,7 @@
                                 console.log("DB has been cleared.")
                                 getImage(function(image){
                                     base64image = image;
-                                    addDataToDB();
+                                    addDataToDB(path);
                                 })
                             }
                             else{
@@ -177,7 +230,9 @@
         })
     }
 
-    function addDataToDB(){
+    function addDataToDB(path){
+
+        var imgPath = path;
 
         ///Load the database
 
@@ -214,8 +269,8 @@
         })
 
         function testBlob(){
-            var path = "img/test1.jpg";
-            getImageFromServer(path,"arraybuffer",function(array){
+
+            getImageFromServer(imgPath,"arraybuffer",function(array){
                 var blob = new Blob([array],{type:"image/jpeg"});
                 store.add(blob,keyArray[3],function(result,err){
                     if(result){
@@ -231,8 +286,8 @@
         }
 
         function testUint8Arr(){
-            var path = "img/test1.jpg";
-            getImageFromServer(path,"arraybuffer",function(array){
+
+            getImageFromServer(imgPath,"arraybuffer",function(array){
                 var uint8Array = new Uint8Array(array);
                 store.add(uint8Array,keyArray[4],function(result,err){
                     if(result){
@@ -249,8 +304,8 @@
 
 
         function testArrayBuffer(){
-            var path = "img/test1.jpg";
-            getImageFromServer(path,"arraybuffer",function(array){
+
+            getImageFromServer(imgPath,"arraybuffer",function(array){
                 store.add(array,keyArray[5],function(result,err){
                     if(result){
                         console.log("TEST 6 - ArrayBuffer complete.")
@@ -355,7 +410,7 @@
                                 break;
                             case "arraybuffer": console.log("ARRAYBUFF " + result.item.byteLength)
                                 var uInt8Array = new Uint8Array(result.item);
-                                var blob = new Blob([uInt8Array],{type:"image/jpeg"});
+                                var blob = new Blob([uInt8Array],{type:"image/png"});
                                 var image = document.createElement("img");
                                 var urlCreate = window.URL || window.webkitURL;
                                 var url = urlCreate.createObjectURL(blob); console.log("ARRAYBUFF2 " + url)
@@ -386,6 +441,19 @@
                                 break;
                         }
                     }
+                },function(complete){
+
+                    if(counter == 0){
+                        console.log("1st round of tests complete...");
+                        window.path = "img/test1.jpg";
+                        keyArray = ["test7","test8","test9","test10","test11","test12"];
+                        load();
+                    }
+                    else{
+                        console.log("2nd round of tests complete...");
+                    }
+
+                    counter++;
                 })
         }
     }
