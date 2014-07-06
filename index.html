@@ -101,6 +101,10 @@
         <td id="test6Value"></td>
         <td id="test6Time"></td>
     </tr>
+    <tr>
+        <td style="font-weight: bold">Size</td>
+        <td colspan="4" id="size1"></td>
+    </tr>
 </table>
 <br><br>
 <table>
@@ -153,6 +157,10 @@
         <td id="test12Value"></td>
         <td id="test12Time"></td>
     </tr>
+    <tr>
+        <td style="font-weight: bold">Size</td>
+        <td colspan="4" id="size2"></td>
+    </tr>
 </table>
 
 <script src="libs/DBStore.js"></script>
@@ -165,6 +173,9 @@
     var store = null;
     var keyArray = ["test1","test2","test3","test4","test5","test6"];
     var dbValidate = null;
+
+    var size1 = document.getElementById("size1");
+    var size2 = document.getElementById("size2");
 
     // Hack to allow performance to run on Safari
     window.performance = window.performance || {};
@@ -203,6 +214,7 @@
                                 console.log("DB has been cleared.")
                                 getImage(function(image){
                                     base64image = image;
+                                    console.log("SIZE BABY " + base64image.length)
                                     addDataToDB(path);
                                 })
                             }
@@ -476,6 +488,15 @@
         xhr.responseType = responseType;
         xhr.onload = function(e){
             if(this.status == 200){
+
+                var type = path.split(".")[1];
+                if(type == "png"){
+                    size1.innerHTML = this.response.byteLength + " bytes";
+                }
+                else{
+                    size2.innerHTML = this.response.byteLength + " bytes";
+                }
+
                 callback(this.response);
             }
             else{
