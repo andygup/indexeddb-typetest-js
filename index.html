@@ -401,9 +401,9 @@
                             value.appendChild(image);
                             break;
                         case "blob": //for Safari!
-                            var image = document.createElement("img"); console.log("BLOB SRC: " + result.$enc)
-                            if(result.item.hasOwnProperty("$enc")){
-                                image.src = result.item.$enc;
+                            var image = document.createElement("img");
+                            if(result.hasOwnProperty("$enc")){
+                                image.src = result.$enc;
                             }
                             else{
                                 var urlCreate = window.URL || window.webkitURL;
@@ -450,136 +450,11 @@
                     }
                 }
 
-                if(count < keyArray.length){
+                if(count < keyArray.length - 1){
                     count++;
                     retriever(count);
                 }
-            })
-        }
-
-        function retrieve(){
-
-                store.getAll(function(result){
-
-                    console.log("Retrieving results: " + JSON.stringify(result.key));
-
-                    if(result){
-
-                        var title = document.getElementById(result.key + "Title");
-                        var test = document.getElementById(result.key + "Key");
-                        var value = document.getElementById(result.key + "Value");
-                        var time = document.getElementById(result.key + "Time");
-
-                        test.innerHTML = result.key;
-
-                        var finalType = getType(result.item);
-                        console.log("Initial TYPE: " + finalType)
-
-                        //Safari bug - not detecting type Uint8Array on the return value
-                        if(finalType === "object" && result.item.hasOwnProperty("byteOffset")){
-                            //It's strange that the return value has a byteOffset property
-                            //but it seems to actually be tried as an ArrayBuffer.
-                            finalType = "arraybuffer";
-                        }
-
-                        //Safari bug - not detecting type ArrayBuffer on the return value
-                        if(finalType === "object" && !result.item.hasOwnProperty("byteOffset") && result.item.hasOwnProperty("byteLength")){
-                            finalType = "arraybuffer";
-                        }
-
-                        if(finalType === "object" && result.item.hasOwnProperty("size")) finalType = "blob";
-
-                        console.log("Final TYPE: " + finalType)
-
-//                        if(result.key == "test5"){
-//                            console.log("YIP")
-//                        }
-
-                        title.innerHTML = finalType;
-
-                        var startTime = performance.now();
-
-                        switch(finalType){
-                            case "string":
-                                var image = document.createElement("img");
-                                image.src = "data:image/png;base64," + result.item;
-                                image.height = 30;
-
-                                var t = performance.now() - startTime;
-                                time.innerHTML = t + "ms";
-
-                                value.appendChild(image);
-                                break;
-                            case "object":
-
-                                var image = document.createElement("img");
-                                image.src = "data:image/png;base64," + result.item.image;
-                                image.height = 30;
-
-                                var t = performance.now() - startTime;
-                                time.innerHTML = t + "ms";
-                                value.appendChild(image)
-                                break;
-                            case "array":
-
-                                var image = document.createElement("img");
-                                image.src = "data:image/png;base64," + result.item[0];
-                                image.height = 30;
-
-                                var t = performance.now() - startTime;
-                                time.innerHTML = t + "ms";
-                                value.appendChild(image);
-                                break;
-                            case "blob": //for Safari!
-                                var image = document.createElement("img"); console.log("BLOB SRC: " + result.item.$enc)
-                                if(result.item.hasOwnProperty("$enc")){
-                                    image.src = result.item.$enc;
-                                }
-                                else{
-                                    var urlCreate = window.URL || window.webkitURL;
-                                    var url = urlCreate.createObjectURL(result.item);
-                                    image.src = url;
-                                }
-                                image.height = 30;
-                                var t = performance.now() - startTime;
-                                time.innerHTML = t + "ms";
-
-                                value.appendChild(image)
-                                break;
-                            case "arraybuffer": console.log("ARRAYBUFF " + result.item.byteLength)
-                                var uInt8Array = new Uint8Array(result.item);
-                                var blob = new Blob([uInt8Array],{type:"image/png"});
-                                var image = document.createElement("img");
-                                var urlCreate = window.URL || window.webkitURL;
-                                var url = urlCreate.createObjectURL(blob); console.log("ARRAYBUFF2 " + url)
-                                image.src = url;
-                                image.height = 30;
-                                image.onload = function(e){
-                                    URL.revokeObjectURL(this.src);
-                                }
-
-                                var t = performance.now() - startTime;
-                                time.innerHTML = t + "ms";
-
-                                value.appendChild(image)
-                                break;
-                            case "uint8array":
-                                var blob = new Blob([result.item],{type:"image/jpeg"});
-                                var image = document.createElement("img");
-                                image.src = URL.createObjectURL(blob);
-                                image.height = 30;
-                                image.onload = function(e){
-                                    URL.revokeObjectURL(this.src);
-                                }
-
-                                var t = performance.now() - startTime;
-                                time.innerHTML = t + "ms";
-
-                                value.appendChild(image)
-                                break;
-                        }
-                    }
-                },function(complete){
+                if(count == keyArray.length - 1){
 
                     if(counter == 0){
                         console.log("1st round of tests complete...");
@@ -592,7 +467,8 @@
                     }
 
                     counter++;
-                })
+                }
+            })
         }
     }
 
