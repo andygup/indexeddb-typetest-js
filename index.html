@@ -214,7 +214,6 @@
                                 console.log("DB has been cleared.")
                                 getImage(function(image){
                                     base64image = image;
-                                    console.log("SIZE BABY " + base64image.length)
                                     addDataToDB(path);
                                 })
                             }
@@ -337,10 +336,13 @@
             store.retrieve(key,function(success,result){
                 if(result){
 
+                    var time = document.getElementById(key + "Time");
+                    var t = performance.now() - startTime;
+                    time.innerHTML = t + "ms";
+
                     var title = document.getElementById(key + "Title");
                     var test = document.getElementById(key + "Key");
                     var value = document.getElementById(key + "Value");
-                    var time = document.getElementById(key + "Time");
 
                     test.innerHTML = key;
 
@@ -370,34 +372,36 @@
                     title.innerHTML = finalType;
 
                     switch(finalType){
+                        case "uint8array":
+                            var blob = new Blob([result],{type:"image/jpeg"});
+                            var image = document.createElement("img");
+                            image.src = URL.createObjectURL(blob);
+                            image.height = 30;
+                            image.onload = function(e){
+                                URL.revokeObjectURL(this.src);
+                            }
+
+                            value.appendChild(image)
+                            break;
                         case "string":
                             var image = document.createElement("img");
                             image.src = "data:image/png;base64," + result;
                             image.height = 30;
 
-                            var t = performance.now() - startTime;
-                            time.innerHTML = t + "ms";
-
                             value.appendChild(image);
                             break;
                         case "object":
-
                             var image = document.createElement("img");
                             image.src = "data:image/png;base64," + result.image;
                             image.height = 30;
 
-                            var t = performance.now() - startTime;
-                            time.innerHTML = t + "ms";
                             value.appendChild(image)
                             break;
                         case "array":
-
                             var image = document.createElement("img");
                             image.src = "data:image/png;base64," + result[0];
                             image.height = 30;
 
-                            var t = performance.now() - startTime;
-                            time.innerHTML = t + "ms";
                             value.appendChild(image);
                             break;
                         case "blob": //for Safari!
@@ -411,12 +415,11 @@
                                 image.src = url;
                             }
                             image.height = 30;
-                            var t = performance.now() - startTime;
-                            time.innerHTML = t + "ms";
 
                             value.appendChild(image)
                             break;
-                        case "arraybuffer": console.log("ARRAYBUFF " + result.byteLength)
+                        case "arraybuffer":
+                            console.log("ARRAYBUFF " + result.byteLength)
                             var uInt8Array = new Uint8Array(result);
                             var blob = new Blob([uInt8Array],{type:"image/png"});
                             var image = document.createElement("img");
@@ -427,23 +430,6 @@
                             image.onload = function(e){
                                 URL.revokeObjectURL(this.src);
                             }
-
-                            var t = performance.now() - startTime;
-                            time.innerHTML = t + "ms";
-
-                            value.appendChild(image)
-                            break;
-                        case "uint8array":
-                            var blob = new Blob([result],{type:"image/jpeg"});
-                            var image = document.createElement("img");
-                            image.src = URL.createObjectURL(blob);
-                            image.height = 30;
-                            image.onload = function(e){
-                                URL.revokeObjectURL(this.src);
-                            }
-
-                            var t = performance.now() - startTime;
-                            time.innerHTML = t + "ms";
 
                             value.appendChild(image)
                             break;
