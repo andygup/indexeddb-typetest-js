@@ -325,9 +325,135 @@
                     else{
                         console.log("TEST 6 - ArrayBuffer FAILED.")
                     }
-
-                    retrieve();
+                    retriever(0);
+//                    retrieve();
                 })
+            })
+        }
+
+        function retriever(count){
+            var key = keyArray[count];
+            var startTime = performance.now();
+            store.retrieve(key,function(success,result){
+                if(result){
+
+                    var title = document.getElementById(key + "Title");
+                    var test = document.getElementById(key + "Key");
+                    var value = document.getElementById(key + "Value");
+                    var time = document.getElementById(key + "Time");
+
+                    test.innerHTML = key;
+
+                    var finalType = getType(result);
+                    console.log("Initial TYPE: " + finalType)
+
+                    //Safari bug - not detecting type Uint8Array on the return value
+                    if(finalType === "object" && result.hasOwnProperty("byteOffset")){
+                        //It's strange that the return value has a byteOffset property
+                        //but it seems to actually be tried as an ArrayBuffer.
+                        finalType = "arraybuffer";
+                    }
+
+                    //Safari bug - not detecting type ArrayBuffer on the return value
+                    if(finalType === "object" && !result.hasOwnProperty("byteOffset") && result.hasOwnProperty("byteLength")){
+                        finalType = "arraybuffer";
+                    }
+
+                    if(finalType === "object" && result.hasOwnProperty("size")) finalType = "blob";
+
+                    console.log("Final TYPE: " + finalType)
+
+//                        if(result.key == "test5"){
+//                            console.log("YIP")
+//                        }
+
+                    title.innerHTML = finalType;
+
+                    switch(finalType){
+                        case "string":
+                            var image = document.createElement("img");
+                            image.src = "data:image/png;base64," + result;
+                            image.height = 30;
+
+                            var t = performance.now() - startTime;
+                            time.innerHTML = t + "ms";
+
+                            value.appendChild(image);
+                            break;
+                        case "object":
+
+                            var image = document.createElement("img");
+                            image.src = "data:image/png;base64," + result.image;
+                            image.height = 30;
+
+                            var t = performance.now() - startTime;
+                            time.innerHTML = t + "ms";
+                            value.appendChild(image)
+                            break;
+                        case "array":
+
+                            var image = document.createElement("img");
+                            image.src = "data:image/png;base64," + result[0];
+                            image.height = 30;
+
+                            var t = performance.now() - startTime;
+                            time.innerHTML = t + "ms";
+                            value.appendChild(image);
+                            break;
+                        case "blob": //for Safari!
+                            var image = document.createElement("img"); console.log("BLOB SRC: " + result.$enc)
+                            if(result.item.hasOwnProperty("$enc")){
+                                image.src = result.item.$enc;
+                            }
+                            else{
+                                var urlCreate = window.URL || window.webkitURL;
+                                var url = urlCreate.createObjectURL(result);
+                                image.src = url;
+                            }
+                            image.height = 30;
+                            var t = performance.now() - startTime;
+                            time.innerHTML = t + "ms";
+
+                            value.appendChild(image)
+                            break;
+                        case "arraybuffer": console.log("ARRAYBUFF " + result.byteLength)
+                            var uInt8Array = new Uint8Array(result);
+                            var blob = new Blob([uInt8Array],{type:"image/png"});
+                            var image = document.createElement("img");
+                            var urlCreate = window.URL || window.webkitURL;
+                            var url = urlCreate.createObjectURL(blob); console.log("ARRAYBUFF2 " + url)
+                            image.src = url;
+                            image.height = 30;
+                            image.onload = function(e){
+                                URL.revokeObjectURL(this.src);
+                            }
+
+                            var t = performance.now() - startTime;
+                            time.innerHTML = t + "ms";
+
+                            value.appendChild(image)
+                            break;
+                        case "uint8array":
+                            var blob = new Blob([result],{type:"image/jpeg"});
+                            var image = document.createElement("img");
+                            image.src = URL.createObjectURL(blob);
+                            image.height = 30;
+                            image.onload = function(e){
+                                URL.revokeObjectURL(this.src);
+                            }
+
+                            var t = performance.now() - startTime;
+                            time.innerHTML = t + "ms";
+
+                            value.appendChild(image)
+                            break;
+                    }
+                }
+
+                if(count < keyArray.length){
+                    count++;
+                    retriever(count);
+                }
             })
         }
 
