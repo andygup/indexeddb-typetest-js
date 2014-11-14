@@ -46,10 +46,14 @@
 <body>
 <div id="header-div">
     <div id="input-container">
-        <!--<input type="text" id="url-input" value="tpks/Beirut.zip" />-->
-        <!--<button id="url-btn">Get file via url</button>-->
+        <form action="">
+            <select onchange="formChange(this)" name="imageType" id="selectImageType">
+                <option value="27" selected="selected">27KB images</option>
+                <option value="58">58KB images</option>
+            </select>
+        </form>
     </div>
-    <div id="header-title">IndexedDB Performance Test</div>
+    <div id="header-title">IndexedDB Read Performance Test</div>
 </div>
 <table>
     <tr>
@@ -167,9 +171,12 @@
 <script src="libs/DBValidate.js"></script>
 <script>
 
-    var counter = 0;
+    var counter;
     var base64image = "";
-    var path = "img/tile1.png";
+    var path = "img/image_58kb.png";
+    var imagePNG = "img/image_27kb.png";
+    var imageJPG = "img/image_27kb.jpg";
+
     var store = null;
     var keyArray = ["test1","test2","test3","test4","test5","test6"];
     var dbValidate = null;
@@ -190,10 +197,12 @@
                 };
     })();
 
-    window.addEventListener("IndexedDBShimInit",load);
+    window.addEventListener("IndexedDBShimInit",function(){
+        load(imagePNG);
+    });
 
-    function load(){
-
+    function load(path){
+        counter = 0;
         store = new DBStore();
         dbValidate = new DBValidate(store);
 
@@ -211,10 +220,15 @@
 
                         clearDB(function(result,err){
                             if(result){
-                                console.log("DB has been cleared.")
-                                getImage(function(image){
+                                console.log("DB has been cleared.");
+
+                                getImage(path,function(image){
                                     base64image = image;
-                                    addDataToDB(path);
+                                    addDataToDB(path,function(){
+                                        window.path = imageJPG;
+                                        keyArray = ["test7","test8","test9","test10","test11","test12"];
+                                        load(imageJPG);
+                                    });
                                 })
                             }
                             else{
@@ -230,18 +244,36 @@
         }
     }
 
+    function formChange(result){
+
+        switch (result.value){
+            case "27":
+                imagePNG = "img/image_27kb.png";
+                imageJPG = "img/image_27kb.jpg";
+                break;
+            case "58":
+                imagePNG = "img/image_58kb.png";
+                imageJPG = "img/image_58kb.jpg";
+                break;
+        }
+
+        keyArray = ["test1","test2","test3","test4","test5","test6"];
+
+        load(imagePNG);
+    }
+
     function clearDB(callback){
         store.deleteAll(callback)
     }
 
-    function getImage(callback){
+    function getImage(path,callback){
         getImageFromServer(path,"arraybuffer",function(image){
             var b64 = _base64ArrayBuffer(image);
             callback(b64);
         })
     }
 
-    function addDataToDB(path){
+    function addDataToDB(path,callback){
 
         var imgPath = path;
 
@@ -325,7 +357,6 @@
                         console.log("TEST 6 - ArrayBuffer FAILED.")
                     }
                     retriever(0);
-//                    retrieve();
                 })
             })
         }
@@ -343,7 +374,7 @@
                     var title = document.getElementById(key + "Title");
                     var test = document.getElementById(key + "Key");
                     var value = document.getElementById(key + "Value");
-
+                    value.innerHTML = "";
                     test.innerHTML = key;
 
                     var finalType = getType(result);
@@ -444,9 +475,7 @@
 
                     if(counter == 0){
                         console.log("1st round of tests complete...");
-                        window.path = "img/test1.jpg";
-                        keyArray = ["test7","test8","test9","test10","test11","test12"];
-                        load();
+                        callback();
                     }
                     else{
                         console.log("2nd round of tests complete...");
@@ -479,10 +508,10 @@
 
                 var type = path.split(".")[1];
                 if(type == "png"){
-                    size1.innerHTML = this.response.byteLength + " bytes";
+                    size1.innerHTML = "PNG " +  this.response.byteLength + " bytes";
                 }
                 else{
-                    size2.innerHTML = this.response.byteLength + " bytes";
+                    size2.innerHTML = "JPG " + this.response.byteLength + " bytes";
                 }
 
                 callback(this.response);
